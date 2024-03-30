@@ -6,6 +6,7 @@ import PaginationComponent from "../Components/Dashboard/Pagination";
 import Loader from "../Components/Common/Loader";
 import TopButton from "../Components/Common/TopButton";
 import get100Coins from "../functions/get100Coins";
+import Footer from "../Components/Common/Footer";
 
 const Dashboard = () => {
   const [coins, setCoins] = useState([]);
@@ -47,7 +48,6 @@ const Dashboard = () => {
   return (
     <>
       <Header />
-      <TopButton />
       {loading ? (
         <Loader />
       ) : (
@@ -62,6 +62,8 @@ const Dashboard = () => {
           )}
         </div>
       )}
+      <TopButton />
+      <Footer />
     </>
   );
 };
