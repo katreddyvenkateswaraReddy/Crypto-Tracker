@@ -9,6 +9,8 @@ import getCoinPrices from "../functions/getCoinPrices";
 import Loader from "../Components/Common/Loader";
 import List from "../Components/Dashboard/List";
 import CoinInfo from "../Components/Coin/CoinInfo";
+import LineChart from "../Components/Coin/LineChart";
+import TogglePriceType from "../Components/Coin/PriceType";
 
 const ComparePage = () => {
   const [crypto1, setCrypto1] = useState("bitcoin");
@@ -18,9 +20,24 @@ const ComparePage = () => {
   const [Loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
   const [PriceType, setPriceType] = useState("prices");
+  const [chartData, setChartData] = useState({});
 
-  const handleDaysChange = (event) => {
+  const handleDaysChange = async (event) => {
+    setLoading(true);
     setDays(event.target.value);
+    const prices1 = await getCoinPrices(crypto1, event.target.value, PriceType);
+    const prices2 = await getCoinPrices(crypto2, event.target.value, PriceType);
+    settingChartData(prices1, setChartData, prices2);
+    setLoading(false);
+  };
+
+  const handlepriceTypeChange = async (event, newType) => {
+    setLoading(true);
+    setPriceType(newType);
+    const prices1 = await getCoinPrices(crypto1, days, newType);
+    const prices2 = await getCoinPrices(crypto2, days, newType);
+    settingChartData(prices1, setChartData, prices2);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -30,19 +47,14 @@ const ComparePage = () => {
   const getData = async () => {
     setLoading(true);
     const data1 = await getCoinData(crypto1);
-    const data2 = await getCoinData(crypto2);
     if (data1) {
-      coinObject(setCrypto1Data, data1);
-    }
-    if (data2) {
-      coinObject(setCrypto2Data, data2);
-    }
-
-    if (data1 && data2) {
-      const prices1 = await getCoinPrices(crypto1, days, PriceType);
-      const prices2 = await getCoinPrices(crypto2, days, PriceType);
-      if (prices1.length > 0 && prices2.length > 0) {
-        // settingChartData(prices, setChartData);
+      const data2 = await getCoinData(crypto2);
+      coinObject(data1, setCrypto1Data);
+      if (data2) {
+        coinObject(data2, setCrypto2Data);
+        const prices1 = await getCoinPrices(crypto1, days, PriceType);
+        const prices2 = await getCoinPrices(crypto2, days, PriceType);
+        settingChartData(prices1, setChartData, prices2);
         setLoading(false);
       }
     }
@@ -53,18 +65,17 @@ const ComparePage = () => {
     if (isCoin2) {
       setCrypto2(event.target.value);
       const data = await getCoinData(event.target.value);
-      coinObject(setCrypto2Data, data);
+      coinObject(data, setCrypto2Data);
+      const prices1 = await getCoinPrices(crypto1, days, PriceType);
+      const prices2 = await getCoinPrices(crypto2, days, PriceType);
+      if (prices1.length > 0 && prices2.length > 0) {
+        // settingChartData(prices, setChartData);
+        setLoading(false);
+      }
     } else {
       setCrypto1(event.target.value);
       const data = await getCoinData(event.target.value);
-      coinObject(setCrypto1Data, data);
-    }
-
-    const prices1 = await getCoinPrices(crypto1, days, PriceType);
-    const prices2 = await getCoinPrices(crypto2, days, PriceType);
-    if (prices1.length > 0 && prices2.length > 0) {
-      // settingChartData(prices, setChartData);
-      setLoading(false);
+      coinObject(data, setCrypto1Data);
     }
   };
 
@@ -94,9 +105,20 @@ const ComparePage = () => {
             <List coin={crypto2Data} />
           </div>
 
+          <div className="grey-wrapper">
+            <TogglePriceType
+              priceType={PriceType}
+              handlepriceTypeChange={handlepriceTypeChange}
+            />
+            <LineChart
+              chartData={chartData}
+              priceType={PriceType}
+              multiAxis={true}
+            />
+          </div>
+
           <CoinInfo heading={crypto1Data.name} desc={crypto1Data.desc} />
           <CoinInfo heading={crypto2Data.name} desc={crypto2Data.desc} />
-
         </>
       )}
     </div>
